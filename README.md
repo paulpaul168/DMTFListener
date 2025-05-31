@@ -1,11 +1,19 @@
-# DTMF Listener
+# DTMF Listener - Open Source Hardware
 
-A real-time DTMF (Dual-Tone Multi-Frequency) detection system built with ESP32 that can detect and decode telephone keypad tones. The system uses digital signal processing to identify DTMF signals and displays the detected digits on an OLED screen.
+A real-time DTMF (Dual-Tone Multi-Frequency) detection system built with ESP32 that can detect and decode telephone keypad tones. The system uses digital signal processing to identify DTMF signals and displays the detected digits on an integrated display.
+
+[![License: CERN-OHL-W](https://img.shields.io/badge/License-CERN--OHL--W-blue.svg)](https://cern-ohl.web.cern.ch/)
+
+## Overview
+
+Detects telephone keypad tones (0-9, *, #, A-D) using just two modules and 5 wire connections.
+
+**Total cost: $11-20 USD | Assembly time: 10 minutes**
 
 ## Features
 
 - **Real-time DTMF Detection**: Detects standard telephone keypad tones (0-9, *, #, A-D)
-- **Visual Feedback**: OLED display shows detected digits and signal strength
+- **Visual Feedback**: Display shows detected digits and signal strength
 - **Audio Level Monitoring**: Real-time audio input monitoring with visual indicators
 - **History Tracking**: Maintains a history of the last 12 detected digits
 - **Debug Mode**: Comprehensive debugging tools for troubleshooting
@@ -15,46 +23,100 @@ A real-time DTMF (Dual-Tone Multi-Frequency) detection system built with ESP32 t
 
 ![DTMF Listener Prototype](prototype.jpg)
 
-*The assembled DTMF Listener showing the ESP32, I2S microphone, and OLED display in action.*
+*The assembled DTMF Listener showing the ESP32, I2S microphone, and display in action.*
 
-## Hardware Requirements
+## Required Hardware
 
-### ESP32 Development Board
-- Any ESP32 board (ESP32-WROOM, ESP32-DevKit, etc.)
+### ESP32 Board with Integrated Display
+Choose one:
 
-### I2S Digital Microphone
-- INMP441, MAX9814, or similar I2S digital microphone
+- **Heltec WiFi Kit 32** - 128x64 OLED, ~$10-15
+- **TTGO T-Display** - 135x240 TFT color, ~$8-12  
+- **LILYGO T5 V2.3** - 2.13" e-paper, ~$12-18
+
+### Microphone Module
+- **INMP441 I2S Digital Microphone** - ~$3-5
 - **Important**: Must be an I2S digital microphone, not analog
 
-### OLED Display
-- 128x64 SSD1306 OLED display with I2C interface
+## Wiring (5 connections)
 
-## Pin Configuration
+| ESP32 Pin | INMP441 Pin | Function        | Wire Color |
+| --------- | ----------- | --------------- | ---------- |
+| 3.3V      | VDD         | Power           | Red        |
+| GND       | GND         | Ground          | Black      |
+| GND       | L/R         | Channel         | Black      |
+| GPIO 25   | WS          | I2S Word Select | Yellow     |
+| GPIO 33   | SCK         | I2S Clock       | Green      |
+| GPIO 34   | SD          | I2S Data        | Blue       |
 
-| Component        | ESP32 Pin | Description                       |
-| ---------------- | --------- | --------------------------------- |
-| **Microphone**   |           |                                   |
-| VDD              | 3.3V      | Power supply (**NOT 5V!**)        |
-| GND              | GND       | Ground                            |
-| WS               | GPIO 25   | Word Select                       |
-| SCK              | GPIO 33   | Serial Clock                      |
-| SD               | GPIO 34   | Serial Data (input-only pin)      |
-| L/R              | GND       | Left/Right selection (GND = left) |
-| **OLED Display** |           |                                   |
-| VCC              | 3.3V      | Power supply                      |
-| GND              | GND       | Ground                            |
-| SDA              | GPIO 4    | I2C Data                          |
-| SCL              | GPIO 15   | I2C Clock                         |
+**📋 For detailed wiring instructions and troubleshooting, see [hardware/docs/wiring_guide.md](hardware/docs/wiring_guide.md)**
+
+## Board-Specific Display Pins (Pre-connected)
+
+| Board              | Display SDA | Display SCL | Display RST |
+| ------------------ | ----------- | ----------- | ----------- |
+| Heltec WiFi Kit 32 | GPIO 4      | GPIO 15     | GPIO 16     |
+| TTGO T-Display     | GPIO 21     | GPIO 22     | GPIO 4      |
+| LILYGO T5 V2.3     | GPIO 21     | GPIO 22     | GPIO 16     |
+
+## Assembly
+
+1. **Power**: Connect ESP32 3.3V and GND to INMP441 VDD and GND
+2. **I2S**: Connect GPIO 25→WS, GPIO 33→SCK, GPIO 34→SD  
+3. **Channel**: Connect ESP32 GND to INMP441 L/R
+4. **Test**: Upload firmware and test with DTMF tones
 
 ## Installation
 
 ### Prerequisites
-- [Arduino IDE](https://www.arduino.cc/en/software) with ESP32 board support
-- Required libraries (install via Arduino Library Manager):
-  - `Adafruit SSD1306`
-  - `Adafruit GFX Library`
+- [PlatformIO](https://platformio.org/) (recommended) or [Arduino IDE](https://www.arduino.cc/en/software) 
+- Required libraries will be automatically managed by PlatformIO
 
-### Setup Steps
+### Setup Steps (PlatformIO - Recommended)
+
+1. **Install PlatformIO**
+   - Download [PlatformIO IDE](https://platformio.org/platformio-ide) or install PlatformIO Core
+   - Or install as VS Code extension: [PlatformIO IDE for VSCode](https://platformio.org/install/ide?install=vscode)
+
+2. **Clone/Download Project**
+   ```bash
+   git clone https://github.com/paulpaul168/dtmf-listener-hardware.git
+   cd dtmf-listener-hardware
+   ```
+
+3. **Configure for Your Board**
+   - Edit `platformio.ini` to select your board:
+   ```ini
+   [env:heltec_wifi_kit_32]
+   platform = espressif32
+   board = heltec_wifi_kit_32
+   framework = arduino
+   lib_deps = 
+       heltecautomation/Heltec ESP32 Dev-Boards
+   
+   [env:ttgo-t-display]
+   platform = espressif32
+   board = ttgo-t1
+   framework = arduino
+   lib_deps = 
+       bodmer/TFT_eSPI
+   
+   [env:lilygo-t5-v2_3]
+   platform = espressif32
+   board = esp32dev
+   framework = arduino
+   lib_deps = 
+       zinggjm/GxEPD2
+   ```
+
+4. **Build and Upload**
+   ```bash
+   pio run --target upload
+   ```
+
+### Alternative Setup (Arduino IDE)
+
+**📋 For detailed Arduino IDE setup instructions, see [arduino_setup.md](arduino_setup.md)**
 
 1. **Install ESP32 Board Support**
    ```
@@ -63,24 +125,65 @@ A real-time DTMF (Dual-Tone Multi-Frequency) detection system built with ESP32 t
    Tools → Board → Boards Manager → Search "ESP32" → Install
    ```
 
-2. **Install Required Libraries**
-   ```
-   Sketch → Include Library → Manage Libraries
-   Search and install:
-   - Adafruit SSD1306
-   - Adafruit GFX Library
-   ```
+2. **Install Board-Specific Libraries**
+   - Heltec: `Heltec ESP32 Dev-Boards`
+   - TTGO: `TFT_eSPI`
+   - LILYGO: `GxEPD2`
 
-3. **Clone/Download Project**
-   ```bash
-   git clone https://github.com/yourusername/dtmf-listener.git
-   ```
-
-4. **Upload Code**
-   - Open `src/main.cpp` in Arduino IDE
+3. **Upload Code**
+   - Open appropriate firmware file for your board
    - Select your ESP32 board: `Tools → Board → ESP32 Arduino → ESP32 Dev Module`
    - Select correct port: `Tools → Port → [Your ESP32 Port]`
    - Upload the code
+
+## Configuration Examples
+
+### PlatformIO Configuration (platformio.ini)
+
+```ini
+[env:heltec_wifi_kit_32]
+platform = espressif32
+board = heltec_wifi_kit_32
+framework = arduino
+lib_deps = 
+    heltecautomation/Heltec ESP32 Dev-Boards
+
+[env:ttgo-t-display]
+platform = espressif32
+board = ttgo-t1
+framework = arduino
+lib_deps = 
+    bodmer/TFT_eSPI
+
+[env:lilygo-t5-v2_3]
+platform = espressif32
+board = esp32dev
+framework = arduino
+lib_deps = 
+    zinggjm/GxEPD2
+```
+
+### Arduino IDE Pin Definitions
+
+**Heltec WiFi Kit 32:**
+```cpp
+#define OLED_SDA    4
+#define OLED_SCL    15  
+#define OLED_RST    16
+#define I2S_WS_PIN  25
+#define I2S_SCK_PIN 33
+#define I2S_SD_PIN  34
+```
+
+**TTGO T-Display:**
+```cpp
+#define TFT_CS      5
+#define TFT_DC      16
+#define TFT_RST     23
+#define I2S_WS_PIN  25
+#define I2S_SCK_PIN 33
+#define I2S_SD_PIN  34
+```
 
 ## Usage
 
@@ -92,7 +195,7 @@ A real-time DTMF (Dual-Tone Multi-Frequency) detection system built with ESP32 t
    - Phone dialer apps
    - Online DTMF tone generators
    - Actual telephone keypad
-4. **View Results** on the OLED display and serial monitor
+4. **View Results** on the display and serial monitor
 
 ### Serial Commands
 
@@ -105,25 +208,25 @@ A real-time DTMF (Dual-Tone Multi-Frequency) detection system built with ESP32 t
 
 ### Display Information
 
-The OLED shows:
+The display shows:
 - **Large Digit**: Currently detected DTMF digit
 - **Signal Levels**: Row (R) and Column (C) frequency magnitudes
 - **Threshold**: Current detection threshold (T)
 - **Status**: Detection status (Listening/Signal/DETECTED!)
 - **History**: Last 12 detected digits
 
-## DTMF Frequency Reference
+## DTMF Frequencies
 
-| Key | Row Freq | Col Freq | Key | Row Freq | Col Freq |
-| --- | -------- | -------- | --- | -------- | -------- |
-| 1   | 697 Hz   | 1209 Hz  | 2   | 697 Hz   | 1336 Hz  |
-| 3   | 697 Hz   | 1477 Hz  | A   | 697 Hz   | 1633 Hz  |
-| 4   | 770 Hz   | 1209 Hz  | 5   | 770 Hz   | 1336 Hz  |
-| 6   | 770 Hz   | 1477 Hz  | B   | 770 Hz   | 1633 Hz  |
-| 7   | 852 Hz   | 1209 Hz  | 8   | 852 Hz   | 1336 Hz  |
-| 9   | 852 Hz   | 1477 Hz  | C   | 852 Hz   | 1633 Hz  |
-| *   | 941 Hz   | 1209 Hz  | 0   | 941 Hz   | 1336 Hz  |
-| #   | 941 Hz   | 1477 Hz  | D   | 941 Hz   | 1633 Hz  |
+| Key | Row Hz | Col Hz | Key | Row Hz | Col Hz |
+| --- | ------ | ------ | --- | ------ | ------ |
+| 1   | 697    | 1209   | 2   | 697    | 1336   |
+| 3   | 697    | 1477   | A   | 697    | 1633   |
+| 4   | 770    | 1209   | 5   | 770    | 1336   |
+| 6   | 770    | 1477   | B   | 770    | 1633   |
+| 7   | 852    | 1209   | 8   | 852    | 1336   |
+| 9   | 852    | 1477   | C   | 852    | 1633   |
+| *   | 941    | 1209   | 0   | 941    | 1336   |
+| #   | 941    | 1477   | D   | 941    | 1633   |
 
 ## Troubleshooting
 
@@ -142,9 +245,10 @@ The OLED shows:
 - Try different DTMF tone generator
 
 ### Display Issues
-- Verify I2C connections (SDA/SCL)
-- Check OLED power supply (3.3V)
-- Ensure correct I2C address (0x3C)
+- Verify correct board selected in Arduino IDE
+- Check display power (3.3V)
+- Ensure correct display library installed
+- Try different USB cable or port
 
 ## Technical Details
 
@@ -159,6 +263,18 @@ The OLED shows:
 - **Display Update Rate**: 100ms
 - **History Size**: 12 digits maximum
 
+## Board Comparison
+
+| Feature           | Heltec WiFi Kit 32 | TTGO T-Display  | LILYGO T5 V2.3     |
+| ----------------- | ------------------ | --------------- | ------------------ |
+| Display Type      | OLED Monochrome    | TFT Color       | E-Paper Monochrome |
+| Display Size      | 0.96" (128x64)     | 1.14" (135x240) | 2.13" (250x122)    |
+| Power Consumption | Low                | Medium          | Ultra Low          |
+| Refresh Rate      | Fast               | Fast            | Slow               |
+| Cost              | Medium             | Low             | High               |
+| Best Use          | General purpose    | Colorful UI     | Battery projects   |
+
+
 ## Contributing
 
 1. Fork the repository
@@ -169,18 +285,20 @@ The OLED shows:
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+- **Hardware**: CERN-OHL-W
+- **Firmware**: MIT  
+- **Documentation**: CC BY-SA 4.0
 
 ## Acknowledgments
 
 - DTMF detection based on Goertzel algorithm implementation
-- Adafruit libraries for OLED display support
+- Board manufacturers for excellent ESP32+display integration
 - ESP32 community for I2S audio examples
 
 ## Version History
 
-- **v1.0**: Initial release with basic DTMF detection
-  - Real-time frequency analysis
-  - OLED display integration
-  - Serial command interface
-  - Microphone testing tools
+**v1.0**: Initial release with basic DTMF detection
+- Real-time frequency analysis
+- Integrated display support
+- Serial command interface
+- Microphone testing tools
