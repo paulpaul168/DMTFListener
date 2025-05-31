@@ -11,6 +11,12 @@ A real-time DTMF (Dual-Tone Multi-Frequency) detection system built with ESP32 t
 - **Debug Mode**: Comprehensive debugging tools for troubleshooting
 - **Serial Commands**: Interactive commands for testing and configuration
 
+## Hardware Prototype
+
+![DTMF Listener Prototype](prototype.jpg)
+
+*The assembled DTMF Listener showing the ESP32, I2S microphone, and OLED display in action.*
+
 ## Hardware Requirements
 
 ### ESP32 Development Board
